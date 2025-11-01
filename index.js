@@ -43,19 +43,41 @@ client.on("interactionCreate", async interaction => {
 // ---- Roblox quiz endpoint ----
 app.post("/quiz", async (req, res) => {
   try {
-    const { username, userId, wrongAnswers, passed, avatarUrl, accountAge } = req.body;
+    const {
+      username,
+      userId,
+      wrongAnswers = 0,
+      passed = false,
+      avatarUrl = "https://www.roblox.com/asset/?id=0",
+      accountAge = null
+    } = req.body;
+
+    if (!username || !userId) {
+      console.warn("Missing username or userId", req.body);
+      return res.status(400).send("Missing username or userId");
+    }
+
     const { createQuizEmbed } = await import("./utils.js");
 
     const channel = await client.channels.fetch(config.quizresultschannelId);
-    const embed = createQuizEmbed({ username, userId, wrongAnswers, passed, avatarUrl, accountAge, totalQuestions: config.totalQuestions });
+    const embed = createQuizEmbed({
+      username,
+      userId,
+      wrongAnswers,
+      passed,
+      avatarUrl,
+      accountAge,
+      totalQuestions: config.totalQuestions
+    });
 
     await channel.send({ embeds: [embed] });
     res.sendStatus(200);
   } catch (err) {
-    console.error(err);
+    console.error("Error in /quiz endpoint:", err);
     res.sendStatus(500);
   }
 });
+
 
 // ---- Start bot & server ----
 client.once("ready", () => {
