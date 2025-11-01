@@ -1,0 +1,14 @@
+{
+  "name": "quiz-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.x",
+    "discord.js": "^14.x",
+    "express": "^4.x",
+    "node-fetch": "^3.3.2"
+  }
+}
