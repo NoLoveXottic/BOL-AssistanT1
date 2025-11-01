@@ -54,21 +54,6 @@ async function getRobloxHeadshot(userId) {
   }
 }
 
-import fetch from "node-fetch"; // make sure this is installed
-
-// Helper: fetch Roblox headshot
-async function fetchRobloxHeadshot(userId) {
-  try {
-    const res = await fetch(
-      `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
-    );
-    const data = await res.json();
-    return data.data[0]?.imageUrl || "https://www.roblox.com/asset/?id=0";
-  } catch (err) {
-    console.error("Failed to fetch Roblox headshot:", err);
-    return "https://www.roblox.com/asset/?id=0";
-  }
-}
 
 
 app.post("/quiz", async (req, res) => {
@@ -110,18 +95,6 @@ app.post("/quiz", async (req, res) => {
   }
 });
 
-
-    const channel = await client.channels.fetch(QUIZ_CHANNEL_ID);
-    if (!channel) throw new Error("Quiz channel not found");
-
-    await channel.send({ embeds: [embed] });
-    res.sendStatus(200);
-
-  } catch (err) {
-    console.error("Error in /quiz endpoint:", err);
-    res.sendStatus(500);
-  }
-});
 
 // ---- Start bot & server ----
 client.once("ready", () => {
