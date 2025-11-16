@@ -9,8 +9,8 @@ import fetch from "node-fetch";
 // ---- Load config ----
 const config = JSON.parse(fs.readFileSync("config.json", "utf-8"));
 
-const BOT_TOKEN = process.env.BOT_TOKEN || config.botToken;
-const QUIZ_CHANNEL_ID = process.env.QUIZRESULTSCHANNELID || config.QUIZ_CHANNEL_ID;
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const QUIZ_CHANNEL_ID = process.env.QUIZ_CHANNEL_ID || config.QUIZ_CHANNEL_ID;
 const TOTAL_QUESTIONS = process.env.TOTAL_QUESTIONS || config.totalQuestions;
 const PORT = process.env.PORT || config.port;
 

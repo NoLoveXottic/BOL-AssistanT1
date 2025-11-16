@@ -22,18 +22,23 @@ export default {
     .setDescription("Send a test quiz result as Hannah with your avatar"),
   async execute(client, interaction, config) {
     const avatarUrl = await getRobloxHeadshot(ROBLOX_USERID);
+    const wrongAnswers = 2;
+    const passed = true;
+    const rank = passed ? Math.max(0, 25 - wrongAnswers) : 0;
 
     const embed = createQuizEmbed({
-      username: "Hannah",   // Your name
+      username: "Hannah",
       userId: ROBLOX_USERID,
-      wrongAnswers: 2,
-      passed: true,
-      avatarUrl,            // Fetched headshot
-      accountAge: 100,      // Optional
-      totalQuestions: config.totalQuestions
+      wrongAnswers,
+      passed,
+      avatarUrl,
+      accountAge: 100,
+      totalQuestions: config.totalQuestions,
+      rank
     });
 
-    const channel = await client.channels.fetch(config.quizresultschannelId);
+    const quizChannelId = process.env.QUIZ_CHANNEL_ID || config.QUIZ_CHANNEL_ID;
+    const channel = await client.channels.fetch(quizChannelId);
     await channel.send({ embeds: [embed] });
     await interaction.reply({ content: "Test quiz result sent as Hannah with your headshot!", ephemeral: true });
   }
