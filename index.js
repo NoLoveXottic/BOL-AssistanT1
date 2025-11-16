@@ -97,7 +97,7 @@ app.post("/quiz", async (req, res) => {
 });
 
 // ---- Start bot & server ----
-client.once("ready", () => {
+client.once("clientReady", () => {
   console.log(`Logged in as ${client.user.tag}`);
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });
