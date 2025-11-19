@@ -3,14 +3,13 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   ChannelType,
-  PermissionFlagsBits,
 } from "discord.js";
 import fs from "fs";
 import path from "path";
 
 const STORAGE_FILE = path.resolve("./data/embeds.json");
 
-// Ensure storage exists
+// Create data folder + file if missing
 if (!fs.existsSync(path.dirname(STORAGE_FILE))) {
   fs.mkdirSync(path.dirname(STORAGE_FILE), { recursive: true });
 }
@@ -18,118 +17,80 @@ if (!fs.existsSync(STORAGE_FILE)) {
   fs.writeFileSync(STORAGE_FILE, JSON.stringify({}, null, 2));
 }
 
-// Load/Save helpers
 const loadEmbeds = () => JSON.parse(fs.readFileSync(STORAGE_FILE, "utf-8"));
-const saveEmbeds = (data) =>
-  fs.writeFileSync(STORAGE_FILE, JSON.stringify(data, null, 2));
+const saveEmbeds = (data) => fs.writeFileSync(STORAGE_FILE, JSON.stringify(data, null, 2));
 
 export default {
   data: new SlashCommandBuilder()
     .setName("embed")
-    .setDescription("Advanced embed builder with chain, edit, and send")
+    .setDescription("Ultimate embed builder — build, edit, preview, send, import/export")
 
-    // === ADD ===
+    // BUILD GROUP
     .addSubcommandGroup((group) =>
       group
         .setName("build")
-        .setDescription("Build and manage embeds")
+        .setDescription("Create and manage embeds")
         .addSubcommand((sub) =>
           sub
             .setName("add")
-            .setDescription("Add a new embed")
-            .addStringOption((opt) =>
-              opt.setName("title").setDescription("Title").setRequired(false)
-            )
+            .setDescription("Add embed via fields OR paste full JSON")
             .addStringOption((opt) =>
               opt
-                .setName("description")
-                .setDescription("Description")
+                .setName("json")
+                .setDescription("Paste full embed JSON (overrides all other fields)")
                 .setRequired(false)
             )
-            .addStringOption((opt) =>
-              opt
-                .setName("color")
-                .setDescription("Hex color (#ff6ec7)")
-                .setRequired(false)
-            )
-            .addStringOption((opt) =>
-              opt.setName("image").setDescription("Image URL").setRequired(false)
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName("thumbnail")
-                .setDescription("Thumbnail URL")
-                .setRequired(false)
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName("author")
-                .setDescription("Author name")
-                .setRequired(false)
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName("author_icon")
-                .setDescription("Author icon URL")
-                .setRequired(false)
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName("footer")
-                .setDescription("Footer text")
-                .setRequired(false)
-            )
-            .addStringOption((opt) =>
-              opt
-                .setName("footer_icon")
-                .setDescription("Footer icon URL")
-                .setRequired(false)
-            )
+            .addStringOption((opt) => opt.setName("title").setDescription("Title"))
+            .addStringOption((opt) => opt.setName("description").setDescription("Description"))
+            .addStringOption((opt) => opt.setName("color").setDescription("Hex color (#ff6ec7)"))
+            .addStringOption((opt) => opt.setName("image").setDescription("Image URL"))
+            .addStringOption((opt) => opt.setName("thumbnail").setDescription("Thumbnail URL"))
+            .addStringOption((opt) => opt.setName("author").setDescription("Author name"))
+            .addStringOption((opt) => opt.setName("author_icon").setDescription("Author icon URL"))
+            .addStringOption((opt) => opt.setName("footer").setDescription("Footer text"))
+            .addStringOption((opt) => opt.setName("footer_icon").setDescription("Footer icon URL"))
             .addStringOption((opt) =>
               opt
                 .setName("fields")
-                .setDescription(
-                  "Fields: name|value|inline,name2|value2 (inline = true/false)"
-                )
-                .setRequired(false)
+                .setDescription("name|value|inline,name2|value2|true")
             )
         )
         .addSubcommand((sub) =>
           sub
             .setName("edit")
-            .setDescription("Edit an existing embed")
+            .setDescription("Edit any field of an existing embed")
             .addIntegerOption((opt) =>
               opt
                 .setName("index")
-                .setDescription("Embed # to edit (1 = first)")
+                .setDescription("Embed number (1 = first)")
                 .setRequired(true)
                 .setMinValue(1)
             )
+            .addStringOption((opt) => opt.setName("title").setDescription("New title"))
+            .addStringOption((opt) => opt.setName("description").setDescription("New description"))
+            .addStringOption((opt) => opt.setName("color").setDescription("New hex color"))
+            .addStringOption((opt) => opt.setName("image").setDescription("New image URL"))
+            .addStringOption((opt) => opt.setName("thumbnail").setDescription("New thumbnail"))
+            .addStringOption((opt) => opt.setName("author").setDescription("New author name"))
+            .addStringOption((opt) => opt.setName("author_icon").setDescription("New author icon"))
+            .addStringOption((opt) => opt.setName("footer").setDescription("New footer text"))
+            .addStringOption((opt) => opt.setName("footer_icon").setDescription("New footer icon"))
             .addStringOption((opt) =>
-              opt.setName("title").setDescription("New title").setRequired(false)
+              opt.setName("fields").setDescription("Replace all fields (same format as add)")
             )
-            // ... repeat other options as needed
         )
         .addSubcommand((sub) =>
           sub
             .setName("remove")
-            .setDescription("Remove an embed")
+            .setDescription("Delete an embed")
             .addIntegerOption((opt) =>
-              opt
-                .setName("index")
-                .setDescription("Embed # to remove (1 = first)")
-                .setRequired(true)
-                .setMinValue(1)
+              opt.setName("index").setDescription("Embed to delete").setRequired(true).setMinValue(1)
             )
         )
     )
 
-    // === PREVIEW & SEND ===
-    .addSubcommand((sub) =>
-      sub
-        .setName("preview")
-        .setDescription("Preview all embeds")
-    )
+    // OTHER COMMANDS
+    .addSubcommand((sub) => sub.setName("preview").setDescription("Preview current chain"))
     .addSubcommand((sub) =>
       sub
         .setName("send")
@@ -142,239 +103,222 @@ export default {
             .setRequired(true)
         )
     )
-    .addSubcommand((sub) =>
-      sub.setName("clear").setDescription("Clear all embeds")
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("export")
-        .setDescription("Export embeds as JSON (for backup)")
-    )
+    .addSubcommand((sub) => sub.setName("clear").setDescription("Delete all embeds"))
+    .addSubcommand((sub) => sub.setName("export").setDescription("Download your embeds as JSON"))
     .addSubcommand((sub) =>
       sub
         .setName("import")
-        .setDescription("Import embeds from JSON (attach file)")
+        .setDescription("Upload embeds.json to replace current chain")
         .addAttachmentOption((opt) =>
-          opt
-            .setName("file")
-            .setDescription("embeds.json file")
-            .setRequired(true)
+          opt.setName("file").setDescription("embeds.json").setRequired(true)
         )
     ),
 
-  // In-memory cache for speed
   cache: new Map(),
 
-  async execute(client, interaction, config) {
+  async execute(client, interaction) {
     const userId = interaction.user.id;
     const sub = interaction.options.getSubcommand();
 
     // Load user data
-    let data = this.cache.get(userId);
-    if (!data) {
+    let userData = this.cache.get(userId);
+    if (!userData) {
       const all = loadEmbeds();
-      data = all[userId] || { embeds: [] };
-      this.cache.set(userId, data);
+      userData = all[userId] || { embeds: [] };
+      this.cache.set(userId, userData);
     }
 
     const save = () => {
       const all = loadEmbeds();
-      all[userId] = data;
+      all[userId] = userData;
       saveEmbeds(all);
-      this.cache.set(userId, data);
+      this.cache.set(userId, userData);
     };
 
-    // === BUILD: ADD ===
+    // Helper: apply field safely
+    const applyField = (embed, field, value, setter) => {
+      if (value !== null) setter(value);
+    };
+
+    // ADD (with JSON priority)
     if (sub === "add") {
-      const embed = new EmbedBuilder();
+      let embed;
+
+      const rawJson = interaction.options.getString("json");
+      if (rawJson) {
+        try {
+          const obj = JSON.parse(rawJson);
+          embed = Array.isArray(obj)
+            ? obj.map((e) => EmbedBuilder.from(e))
+            : [EmbedBuilder.from(obj)];
+          userData.embeds.push(...embed);
+          save();
+          await interaction.reply({
+            content: `Added **${embed.length}** embed(s) from JSON! Total: ${userData.embeds.length}`,
+            ephemeral: true,
+          });
+          return;
+        } catch (e) {
+          await interaction.reply({ content: "Invalid JSON!", ephemeral: true });
+          return;
+        }
+      }
+
+      // Normal field-based creation
+      embed = new EmbedBuilder();
       let hasContent = false;
 
-      const apply = (opt, setter) => {
-        const val = interaction.options.getString(opt);
-        if (val) {
-          setter(val);
-          hasContent = true;
-        }
-      };
+      const title = interaction.options.getString("title");
+      const desc = interaction.options.getString("description");
+      const color = interaction.options.getString("color");
+      const image = interaction.options.getString("image");
+      const thumb = interaction.options.getString("thumbnail");
+      const author = interaction.options.getString("author");
+      const authorIcon = interaction.options.getString("author_icon");
+      const footer = interaction.options.getString("footer");
+      const footerIcon = interaction.options.getString("footer_icon");
+      const fields = interaction.options.getString("fields");
 
-      apply("title", (v) => embed.setTitle(v.slice(0, 256)));
-      apply("description", (v) => embed.setDescription(v.slice(0, 4096)));
-      apply("color", (v) => {
-        const c = v.replace(/[^0-9a-fA-F]/g, "");
+      if (title) { embed.setTitle(title.slice(0, 256)); hasContent = true; }
+      if (desc) { embed.setDescription(desc.slice(0, 4096)); hasContent = true; }
+      if (color) {
+        const c = color.replace(/[^0-9a-fA-F]/g, "");
         if (c.length === 6) embed.setColor(`#${c}`);
-      });
-      apply("image", (v) => embed.setImage(v));
-      apply("thumbnail", (v) => embed.setThumbnail(v));
-      apply("author", (v) => embed.setAuthor({ name: v.slice(0, 256) }));
-      apply("author_icon", (v) => {
-        const auth = embed.data.author || {};
-        auth.icon_url = v;
-        embed.setAuthor(auth);
-      });
-      apply("footer", (v) => embed.setFooter({ text: v.slice(0, 2048) }));
-      apply("footer_icon", (v) => {
-        const foot = embed.data.footer || {};
-        foot.icon_url = v;
-        embed.setFooter(foot);
-      });
+      }
+      if (image) embed.setImage(image);
+      if (thumb) embed.setThumbnail(thumb);
+      if (author) embed.setAuthor({ name: author.slice(0, 256), iconURL: authorIcon });
+      if (footer) embed.setFooter({ text: footer.slice(0, 2048), iconURL: footerIcon });
 
-      // Fields
-      const fieldsRaw = interaction.options.getString("fields");
-      if (fieldsRaw) {
-        const parts = fieldsRaw.split(",");
-        for (const part of parts) {
-          const [name, value, inlineStr] = part.split("|");
-          if (name && value) {
+      if (fields) {
+        fields.split(",").forEach((part) => {
+          const [n, v, i] = part.split("|");
+          if (n && v) {
             embed.addFields({
-              name: name.slice(0, 256),
-              value: value.slice(0, 1024),
-              inline: inlineStr?.toLowerCase() === "true",
+              name: n.slice(0, 256),
+              value: v.slice(0, 1024),
+              inline: i?.toLowerCase() === "true",
             });
             hasContent = true;
           }
-        }
+        });
       }
 
       if (!hasContent) {
-        embed
-          .setTitle("Empty Embed")
-          .setDescription("*Add fields to see content!*")
-          .setColor("#5865F2");
+        embed.setTitle("Empty Embed").setDescription("Add content!").setColor("#5865F2");
       }
 
-      data.embeds.push(embed);
+      userData.embeds.push(embed);
       save();
 
       await interaction.reply({
-        content: `Embed added! Total: **${data.embeds.length}**`,
+        content: `Embed added! Total: **${userData.embeds.length}** | Use \`/embed preview\``,
         ephemeral: true,
       });
       return;
     }
 
-    // === BUILD: EDIT (simplified – add more fields as needed) ===
+    // FULL EDIT SUPPORT
     if (sub === "edit") {
       const index = interaction.options.getInteger("index") - 1;
-      if (index < 0 || index >= data.embeds.length) {
-        return interaction.reply({
-          content: "Invalid index.",
-          ephemeral: true,
-        });
+      if (index < 0 || index >= userData.embeds.length) {
+        return interaction.reply({ content: "Invalid index.", ephemeral: true });
       }
 
-      const embed = data.embeds[index];
-      const title = interaction.options.getString("title");
-      if (title) embed.setTitle(title.slice(0, 256));
+      const embed = userData.embeds[index];
+
+      const updates = [
+        [interaction.options.getString("title"), (v) => embed.setTitle(v.slice(0, 256))],
+        [interaction.options.getString("description"), (v) => embed.setDescription(v.slice(0, 4096))],
+        [interaction.options.getString("color"), (v) => {
+          const c = v.replace(/[^0-9a-fA-F]/g, "");
+          if (c.length === 6) embed.setColor(`#${c}`);
+        }],
+        [interaction.options.getString("image"), (v) => embed.setImage(v)],
+        [interaction.options.getString("thumbnail"), (v) => embed.setThumbnail(v)],
+        [interaction.options.getString("author"), (v) => embed.setAuthor({ name: v.slice(0, 256), iconURL: embed.data.author?.icon_url })],
+        [interaction.options.getString("author_icon"), (v) => embed.setAuthor({ name: embed.data.author?.name || " ", iconURL: v })],
+        [interaction.options.getString("footer"), (v) => embed.setFooter({ text: v.slice(0, 2048), iconURL: embed.data.footer?.icon_url })],
+        [interaction.options.getString("footer_icon"), (v) => embed.setFooter({ text: embed.data.footer?.text || " ", iconURL: v })],
+        [interaction.options.getString("fields"), (v) => {
+          embed.spliceFields(0, embed.data.fields?.length || 0);
+          v.split(",").forEach((p) => {
+            const [n, val, i] = p.split("|");
+            if (n && val) {
+              embed.addFields({ name: n.slice(0, 256), value: val.slice(0, 1024), inline: i?.toLowerCase() === "true" });
+            }
+          });
+        }],
+      ];
+
+      let changed = false;
+      for (const [value, setter] of updates) {
+        if (value !== null) {
+          setter(value);
+          changed = true;
+        }
+      }
+
+      if (!changed) {
+        return interaction.reply({ content: "No changes made.", ephemeral: true });
+      }
 
       save();
-      await interaction.reply({
-        content: `Embed #${index + 1} updated!`,
-        ephemeral: true,
-      });
+      await interaction.reply({ content: `Embed #${index + 1} updated!`, ephemeral: true });
       return;
     }
 
-    // === BUILD: REMOVE ===
-    if (sub === "remove") {
-      const index = interaction.options.getInteger("index") - 1;
-      if (index < 0 || index >= data.embeds.length) {
-        return interaction.reply({
-          content: "Invalid index.",
-          ephemeral: true,
-        });
-      }
-      data.embeds.splice(index, 1);
-      save();
-      await interaction.reply({
-        content: `Embed #${index + 1} removed!`,
-        ephemeral: true,
-      });
-      return;
-    }
+    // Other commands (preview, send, clear, export, import) remain the same as before
+    // (just copied with minor cleanup)
 
-    // === PREVIEW ===
     if (sub === "preview") {
-      if (data.embeds.length === 0) {
-        return interaction.reply({
-          content: "No embeds. Use `/embed build add` first.",
-          ephemeral: true,
-        });
-      }
-      const toSend = data.embeds.slice(0, 10);
+      if (userData.embeds.length === 0) return interaction.reply({ content: "No embeds yet!", ephemeral: true });
       await interaction.reply({
-        content:
-          data.embeds.length > 10
-            ? `Previewing first 10 of **${data.embeds.length}** embeds:`
-            : `Previewing **${data.embeds.length}** embed(s):`,
-        embeds: toSend,
+        content: `Previewing **${userData.embeds.length}** embed(s):`,
+        embeds: userData.embeds.slice(0, 10),
         ephemeral: false,
       });
       return;
     }
 
-    // === SEND ===
     if (sub === "send") {
-      if (data.embeds.length === 0) {
-        return interaction.reply({
-          content: "No embeds to send.",
-          ephemeral: true,
-        });
-      }
+      if (userData.embeds.length === 0) return interaction.reply({ content: "Nothing to send.", ephemeral: true });
       const channel = interaction.options.getChannel("channel");
-      const toSend = data.embeds.slice(0, 10);
-      await channel.send({ embeds: toSend });
-      await interaction.reply({
-        content: `Sent ${toSend.length} embed(s) to ${channel}!`,
-        ephemeral: true,
-      });
+      await channel.send({ embeds: userData.embeds.slice(0, 10) });
+      await interaction.reply({ content: `Sent to ${channel}!`, ephemeral: true });
       return;
     }
 
-    // === CLEAR ===
     if (sub === "clear") {
-      data.embeds = [];
+      userData.embeds = [];
       save();
-      await interaction.reply({ content: "All embeds cleared!", ephemeral: true });
+      await interaction.reply({ content: "Cleared!", ephemeral: true });
       return;
     }
 
-    // === EXPORT ===
     if (sub === "export") {
-      const buffer = Buffer.from(JSON.stringify(data.embeds, null, 2));
+      const file = Buffer.from(JSON.stringify(userData.embeds, null, 2));
       await interaction.reply({
-        content: "Here is your embed chain (JSON):",
-        files: [{ attachment: buffer, name: "embeds.json" }],
+        content: "Your embed chain:",
+        files: [{ attachment: file, name: "embeds.json" }],
         ephemeral: true,
       });
       return;
     }
 
-    // === IMPORT ===
     if (sub === "import") {
-      const attachment = interaction.options.getAttachment("file");
-      if (!attachment.name.endsWith(".json")) {
-        return interaction.reply({
-          content: "Please upload a `.json` file.",
-          ephemeral: true,
-        });
-      }
+      const att = interaction.options.getAttachment("file");
+      if (!att.name.endsWith(".json")) return interaction.reply({ content: "Must be .json", ephemeral: true });
       try {
-        const res = await fetch(attachment.url);
+        const res = await fetch(att.url);
         const json = await res.json();
-        if (!Array.isArray(json)) throw new Error("Invalid format");
-        data.embeds = json.map((e) => EmbedBuilder.from(e)).slice(0, 50);
+        if (!Array.isArray(json)) throw "";
+        userData.embeds = json.map(e => EmbedBuilder.from(e)).slice(0, 50);
         save();
-        await interaction.reply({
-          content: `Imported ${data.embeds.length} embed(s)!`,
-          ephemeral: true,
-        });
-      } catch (err) {
-        await interaction.reply({
-          content: "Failed to import: invalid JSON.",
-          ephemeral: true,
-        });
+        await interaction.reply({ content: `Imported ${userData.embeds.length} embeds!`, ephemeral: true });
+      } catch {
+        await interaction.reply({ content: "Invalid JSON file.", ephemeral: true });
       }
-      return;
     }
   },
 };
